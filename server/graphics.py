@@ -24,6 +24,16 @@ SCREENSTAR_SMALL_REGULAR = {
     }
 }
 
+SCREENSTAR_LARGE_REGULAR = {
+    'file': 'assets/Screenstar-Small-Regular.otf',
+    'size': 28,
+    'height': 30,
+    'y_offset': 4,
+    'width_overrides': {
+        ' ': 3
+    }
+}
+
 
 def draw_text(text, font_spec, text_color, xy=None, anchor=None,
               box_color=None, box_padding=0, border_color=None, border_width=0,

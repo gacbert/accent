@@ -1,73 +1,3 @@
-#
-# Regular Flow:
-#
-# ┌────────────┐       ┌────────────┐       ┌────────────┐
-# │   Client   │       │ App Engine │       │ Firestore  │
-# └─────┬──────┘       └─────┬──────┘       └─────┬──────┘
-#       │                    │                    │
-#       ├───┐                │                    │
-#       │   │ Wake           │                    │
-#       │◀──┘                │                    │
-#       │                    │                    │
-#       │     /epd (Key)     │                    │
-#       ├───────────────────▶├─┐ Schedule (User)  │
-#       │                    │ ├─────────────────▶├─┐
-#       │                    │ │                  │ │
-#       │                    │ │    User Data     │ │
-#       │   Content Image    │ │◁ ─ ─ ─ ─ ─ ─ ─ ─ ┼─┘
-#       │◁ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┼─┘                  │
-#       │                    │                    │
-#       ├───┐                │                    │
-#       │   │ Display        │                    │
-#       │◀──┘                │                    │
-#       │                    │                    │
-#       │    /next (Key)     │                    │
-#       ├───────────────────▶├─┐ Schedule (User)  │
-#       │                    │ ├─────────────────▶├─┐
-#       │                    │ │                  │ │
-#       │                    │ │    User Data     │ │
-#       │     Sleep Time     │ │◁ ─ ─ ─ ─ ─ ─ ─ ─ ┼─┘
-#       │◁ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┼─┘                  │
-#       │                    │                    │
-#       ├───┐                │                    │
-#       │   │ Sleep          │                    │
-#       │◀──┘                │                    │
-#       │                    │                    │
-#
-#
-# New User Flow:
-#
-# ┌────────────┐       ┌────────────┐       ┌────────────┐       ┌────────────┐
-# │   Client   │       │ App Engine │       │ Firestore  │       │  Browser   │
-# └─────┬──────┘       └─────┬──────┘       └─────┬──────┘       └─────┬──────┘
-#       │                    │                    │                    │
-#       ├───┐                │                    │                    │
-#       │   │ Wake           │                    │                    │
-#       │◀──┘                │                    │                    │
-#       │                    │                    │                    │
-#       │     /epd (Key)     ├─┐ Schedule (User)  │                    │
-#       ├───────────────────▶│ ├─────────────────▶├─┐                  │
-#       │                    │ │                  │ │                  │
-#       │                    │ │      Error       │ │                  │
-#       │ Settings URL Image │ │x ─ ─ ─ ─ ─ ─ ─ ─ ┼─┘                  │
-#       │◁ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┼─┘                  │                    │
-#       │                    │                    │                    │
-#       ├───┐                │                    │                    │
-#       │   │ Display        │                    │                    │
-#       │◀──┘                │                    │       Settings URL │
-#       │                    │                    │     ○─────────────▶├─┐
-#       ├───┐                │                    │                    │ │
-#       │   │ Sleep          │                    │     User Data      │ │
-#       │◀──┘                │                    │◁ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┼─┘
-#       │                    │                    │                    │
-#    ┌──┴────────────────────┴────────────────────┴────────────────────┴──┐
-#    │                                                                    │
-#    │                            Regular Flow                            │
-#    │                                                                    │
-#    └──┬────────────────────┬────────────────────┬────────────────────┬──┘
-#       │                    │                    │                    │
-#
-
 from flask import Flask
 from flask import redirect
 from flask import render_template
@@ -93,6 +23,7 @@ from firestore import Firestore
 from firestore import GoogleCalendarStorage
 from geocoder import Geocoder
 from google_calendar import GoogleCalendar
+from mtb_status import MTBStatus
 from response import content_response
 from response import epd_response
 from response import gif_response
@@ -118,6 +49,7 @@ geocoder = Geocoder()
 # Helper library instances.
 artwork = Artwork()
 calendar = GoogleCalendar(geocoder)
+mtb_status = MTBStatus()
 city = City(geocoder)
 commute = Commute(geocoder)
 everyone = Everyone(geocoder)
@@ -158,6 +90,10 @@ def calendar_gif(key=None, user=None):
 
     return content_response(calendar, gif_response, user)
 
+@app.route('/MTB')
+@user_auth(image_response=gif_response)
+def MTB_gif(key=None, user=None):
+    return content_response(mtb_status, gif_response, user)
 
 @app.route('/everyone')
 @user_auth(image_response=gif_response)
@@ -246,7 +182,7 @@ def hello_get(key):
 @validate_key
 def hello_post(key):
     """Saves user data and responds with the updated form."""
-
+    print('hello post')
     # Build the schedule from the form data, dropping any empty entries.
     form = request.form
     list_form = form.to_dict(flat=False)
@@ -259,6 +195,7 @@ def hello_post(key):
 
     # Update the existing user data or create a new one.
     firestore = Firestore()
+    print('Accessing firestore....')
     firestore.set_user(key, {
         'home': form['home'],
         'work': form['work'],
@@ -303,4 +240,5 @@ def server_error(e):
 
 
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=8080, debug=True)
+    print('running')
+    app.run(host='0.0.0.0', port=8888, debug=True)
