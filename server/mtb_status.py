@@ -69,7 +69,7 @@ class MTBStatus(ImageContent):
                 test = item
                 status_dict[test.parent.parent.parent.a.text] = True if 'OPEN' in item.text else False
         self.status = status_dict
-    def image(status):
+    def image(self, _):
         """Generates an image with MTB status"""
 
         resp = requests.get('https://www.trianglemtb.com')

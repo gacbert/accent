@@ -7,7 +7,7 @@ from logging import error
 from logging import exception
 from oauth2client.client import HttpAccessTokenRefreshError
 from time import time
-
+import sys
 from artwork import Artwork
 from auth import ACCOUNT_ACCESS_URL
 from auth import google_calendar_step1
@@ -94,7 +94,7 @@ def calendar_gif(key=None, user=None):
 
     return content_response(calendar, gif_response, user)
 
-@app.route('/MTB')
+@app.route('/mtb_status')
 @user_auth(image_response=gif_response)
 def MTB_gif(key=None, user=None):
     return content_response(mtb_status, gif_response, user)
@@ -169,7 +169,6 @@ def social():
 @validate_key
 def hello_get(key):
     """Responds with a form for editing user data."""
-
     # Look up any existing user data.
     calendar_storage = GoogleCalendarStorage(key)
     calendar_credentials = calendar_storage.get()

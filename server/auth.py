@@ -6,6 +6,7 @@ from logging import error
 from oauth2client.client import HttpAccessTokenRefreshError
 from oauth2client.client import OAuth2WebServerFlow
 from re import compile as re_compile
+import sys
 
 from firestore import Firestore
 from firestore import GoogleCalendarStorage
@@ -46,10 +47,10 @@ def _valid_key(key):
 
 def validate_key(func):
     """A decorator for Flask route functions to enforce valid keys."""
-
     @wraps(func)
     def wrapper(*args, **kwargs):
         if not _valid_key(kwargs['key']):
+            print(kwargs['key'], file=sys.stdout)
             return forbidden_response()
 
         return func(*args, **kwargs)
